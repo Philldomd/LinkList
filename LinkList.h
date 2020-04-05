@@ -67,8 +67,9 @@ public:
 	ListNode<T>* lastNode;
 	List() : size(0), root(0), lastNode(0) {}
 	~List() {
+		T data;
 		while (root != nullptr) {
-			Pop();
+			Pop(data);
 		}
 	}
 	ListNode<T>* Begin() {
@@ -92,22 +93,19 @@ public:
 		}
 		size++;
 	}
-	void Pop() {
-		assert(root != nullptr);
-		if (root->next == nullptr) {
-			delete root;
-			root = nullptr;
+	void Push_back(T p_newData) {
+		ListNode<T>* node = new ListNode<T>;
+		assert(node != nullptr);
+		node->data = p_newData;
+		if (lastNode != nullptr) {
+			lastNode->next = node;
 		}
-		else {
-			ListNode<T>* prevNode = root;
-			while (prevNode->next != nullptr && prevNode->next != lastNode) {
-				prevNode = prevNode->next;
-			}
-			delete lastNode;
-			prevNode->next = nullptr;
-			lastNode = prevNode;
+		node->prev = lastNode;
+		lastNode = node;
+		if (lastNode->prev == nullptr) {
+			root = node;
 		}
-		size = (size == 0 ? size : size - 1);
+		size++;
 	}
 	void Pop_front() {
 		assert(lastNode != nullptr);
@@ -116,10 +114,7 @@ public:
 			lastNode = nullptr;
 		}
 		else {
-			ListNode<T>* nextNode = lastNode;
-			while (nextNode->prev != nullptr && nextNode->prev != root) {
-				nextNode = nextNode->prev;
-			}
+			ListNode<T>* nextNode = root->next;
 			delete root;
 			nextNode->prev = nullptr;
 			root = nextNode;
@@ -134,10 +129,7 @@ public:
 			root = nullptr;
 		}
 		else {
-			ListNode<T>* prevNode = root;
-			while (prevNode->next != nullptr && prevNode->next != lastNode) {
-				prevNode = prevNode->next;
-			}
+			ListNode<T>* prevNode = lastNode->prev;
 			p_tempdata = lastNode->data;
 			delete lastNode;
 			prevNode->next = nullptr;
@@ -165,7 +157,7 @@ public:
 		int size=0;
 		std::fread(reinterpret_cast<char*>(&size), sizeof(int), 1, p_file);
 		p_data.resize(size);
- 		std::fread(&p_data[0], sizeof(char), size, p_file);
+ 		std::fread((void*)(p_data.data()), sizeof(p_data[0]), size, p_file);
 		Push(p_data);
 	}
 	template<typename T>
@@ -183,9 +175,10 @@ public:
 		}
 	}
 
-	void Unserialize(T p_data, FILE* p_file) {
+	void Unserialize(FILE* p_file) {
+		T data;
 		while (!std::feof(p_file)) {
-			fromByte(p_data, p_file);
+			fromByte(data, p_file);
 		}
 		Pop_front(); //To remove the last empty element of EOF
 	}
